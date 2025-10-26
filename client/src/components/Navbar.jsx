@@ -1,159 +1,116 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { assets } from "../assets/images/assets";
 import vinitamartLogo from "../assets/images/vinitamart_logo.png";
 import { useAppContext } from "../context/AppContext";
 
-  const Navbar = () => {
-  const [open, setOpen] = useState(false);
+const Navbar = () => {
+  const [isMenuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const { searchQuery, setSearchQuery, cartCount } = useAppContext();
 
-  // Show search bar only on Home and Products pages
-  const showSearch = location.pathname === "/" || location.pathname === "/products";
-  // Hide cart icon on About and Contact pages
-  const showCart = !(location.pathname === "/about" || location.pathname === "/contact");
+  const showSearch = location.pathname === "/" || location.pathname.startsWith("/products");
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    const original = document.body.style.overflow;
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = original || "";
-    }
+    document.body.style.overflow = isMenuOpen ? "hidden" : "auto";
     return () => {
-      document.body.style.overflow = original || "";
+      document.body.style.overflow = "auto";
     };
-  }, [open]);
+  }, [isMenuOpen]);
 
-  const isActive = (path) => location.pathname === path;
+  const navLinkClass = ({ isActive }) => {
+    return `relative py-2 text-base font-semibold after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all after:duration-300 ${
+      isActive
+        ? "text-primary after:w-full"
+        : "text-text-header hover:text-primary after:w-0 hover:after:w-full"
+    }`;
+  };
 
   return (
-    <header className="w-full bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 md:gap-0">
-        <div className="flex items-center">
-          {/* Logo */}
-          <Link to="/" className="flex items-center" aria-label="vinitamart home">
+    <header className="w-full bg-background/80 backdrop-blur-lg sticky top-0 z-50 border-b border-border">
+      <div className="mx-auto px-6 md:px-16 lg:px-24 xl:px-32 py-3 grid grid-cols-3 items-center">
+        {/* Left: Logo */}
+        <div className="flex justify-start">
+          <Link to="/" aria-label="vinitamart home">
             <img
               src={vinitamartLogo}
               alt="vinitamart logo"
-              className="h-10 md:h-12 lg:h-16 w-auto object-contain"
-              loading="eager"
+              className="h-12 md:h-14 w-auto object-contain"
             />
           </Link>
         </div>
 
-        {/* Desktop Nav - centered */}
-        <nav className="hidden md:flex gap-6 text-sm font-medium flex-1 justify-center">
-          <Link to="/" className={`${isActive("/") ? "text-primary border-b-2 border-primary" : "text-gray-700 hover:text-primary"} pb-1`}>Home</Link>
-          <Link to="/products" className={`${isActive("/products") ? "text-primary border-b-2 border-primary" : "text-gray-700 hover:text-primary"} pb-1`}>Products</Link>
-          <Link to="/about" className={`${isActive("/about") ? "text-primary border-b-2 border-primary" : "text-gray-700 hover:text-primary"} pb-1`}>About</Link>
-          <Link to="/contact" className={`${isActive("/contact") ? "text-primary border-b-2 border-primary" : "text-gray-700 hover:text-primary"} pb-1`}>Contact</Link>
+        {/* Center: Desktop Navigation */}
+        <nav className="hidden lg:flex items-center justify-center gap-10">
+          <NavLink to="/" className={navLinkClass}>Home</NavLink>
+          <NavLink to="/products" className={navLinkClass}>Products</NavLink>
+          <NavLink to="/about" className={navLinkClass}>About</NavLink>
+          <NavLink to="/contact" className={navLinkClass}>Contact</NavLink>
         </nav>
 
-        {/* Search Bar (only Home & Products) */}
-        {showSearch && (
-          <div className="flex-1 flex justify-center md:justify-end mx-2">
-            <div className="relative w-full max-w-[240px] sm:max-w-[280px] md:w-72">
-              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                  <path fillRule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.25 12.01l4.744 4.744a.75.75 0 1 0 1.06-1.06l-4.744-4.745A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clipRule="evenodd" />
+        {/* Right: Search, Cart, Menu */}
+        <div className="flex items-center justify-end gap-3 md:gap-4">
+          {/* Search Bar Container */}
+          <div className="relative hidden md:block">
+            <div className={`transition-all duration-300 ${showSearch ? 'w-48 lg:w-64 opacity-100' : 'w-0 opacity-0'}`}>
+              <span className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted transition-opacity ${showSearch ? 'opacity-100' : 'opacity-0'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
                 </svg>
               </span>
               <input
                 type="search"
-                inputMode="search"
                 aria-label="Search products"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
-                className="w-full h-9 md:h-9 pl-9 pr-9 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm shadow-sm"
-                autoCorrect="on"
-                autoCapitalize="none"
+                className={`w-full h-11 pl-11 pr-4 rounded-full border border-border bg-background-alt focus:outline-none focus:ring-2 focus:ring-primary text-sm shadow-sm transition-all ${showSearch ? 'visible' : 'invisible'}`}
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 active:bg-gray-200"
-                  aria-label="Clear search"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-[14px] h-[14px]">
-                    <path fillRule="evenodd" d="M6.72 6.72a.75.75 0 0 1 1.06 0L12 10.94l4.22-4.22a.75.75 0 1 1 1.06 1.06L13.06 12l4.22 4.22a.75.75 0 1 1-1.06 1.06L12 13.06l-4.22 4.22a.75.75 0 1 1-1.06-1.06L10.94 12 6.72 7.78a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              )}
             </div>
           </div>
-        )}
 
-        {/* Mobile Menu Toggle (moved to far right) */}
-        <button
-          className="md:hidden p-2 rounded-lg border border-gray-200 hover:bg-gray-50 active:bg-gray-100 ml-auto"
-          onClick={() => setOpen((prev) => !prev)}
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          aria-controls="mobile-menu"
-        >
-          <img src={assets.menu_icon} alt="Menu" className="w-6 h-6" />
-        </button>
+          {/* Cart Icon */}
+          <Link
+            to="/cart"
+            className="relative p-2.5 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            aria-label={`Cart with ${cartCount?.() || 0} items`}
+          >
+            <img src={assets.cart_icon} alt="Cart" className="w-6 h-6 text-text-header" />
+            {cartCount?.() > 0 && (
+              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded-full bg-primary text-white text-xs font-bold border-2 border-background">
+                {cartCount()}
+              </span>
+            )}
+          </Link>
 
-        {/* Right Side Icons (desktop only) */}
-        <div className="hidden md:flex items-center gap-4 mt-2 md:mt-0">
-          {showCart && (() => {
-            const count = cartCount?.() || 0;
-            return (
-              <Link
-                to="/cart"
-                className="relative p-2 rounded-lg hover:bg-gray-50 active:bg-gray-100"
-                aria-label={`Cart${count ? `, ${count} items` : ""}`}
-              >
-                <img src={assets.cart_icon} alt="Cart" className="w-6 h-6 md:w-7 md:h-7" />
-                {count > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] leading-[18px] text-center font-semibold select-none">
-                    {count}
-                  </span>
-                )}
-              </Link>
-            );
-          })()}
+          {/* Mobile Menu Toggle */}
+          <button
+            className="lg:hidden p-2 rounded-lg"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            <img src={assets.menu_icon} alt="Menu" className="w-6 h-6" />
+          </button>
         </div>
       </div>
 
-      {/* Mobile Dropdown Menu */}
-      <div
-        id="mobile-menu"
-        className={`${open ? "flex" : "hidden"} absolute top-full left-0 w-full bg-white shadow-md py-2 flex-col items-stretch divide-y divide-gray-100 md:hidden z-50`}
-      >
-        <Link onClick={() => setOpen(false)} to={"/"} className={`px-6 py-4 text-sm font-medium ${isActive("/") ? "text-primary" : "text-gray-800"}`}>
-          Home
-        </Link>
-        <Link onClick={() => setOpen(false)} to={"/products"} className={`px-6 py-4 text-sm font-medium ${isActive("/products") ? "text-primary" : "text-gray-800"}`}>
-          Products
-        </Link>
-        <Link onClick={() => setOpen(false)} to={"/about"} className={`px-6 py-4 text-sm font-medium ${isActive("/about") ? "text-primary" : "text-gray-800"}`}>
-          About
-        </Link>
-        <Link onClick={() => setOpen(false)} to={"/contact"} className={`px-6 py-4 text-sm font-medium ${isActive("/contact") ? "text-primary" : "text-gray-800"}`}>
-          Contact
-        </Link>
-        {/* Cart in mobile menu */}
-        {showCart && (() => { const count = cartCount?.() || 0; return (
-          <Link onClick={() => setOpen(false)} to={"/cart"} className="px-6 py-4 text-sm font-medium text-gray-800 flex items-center gap-2">
-            <img src={assets.cart_icon} alt="Cart" className="w-5 h-5" />
-            <span>Cart{count > 0 ? ` (${count})` : ""}</span>
-          </Link>
-        ); })()}
+      {/* Mobile Menu - No changes needed here */}
+      <div className={`fixed inset-0 z-50 transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "translate-x-full"} lg:hidden`}>
+        <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)}></div>
+        <div className="relative w-72 h-full bg-background ml-auto flex flex-col p-6">
+          <button onClick={() => setMenuOpen(false)} className="self-end mb-8 p-2" aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <nav className="flex flex-col gap-8 text-xl font-semibold">
+            <NavLink to="/" onClick={() => setMenuOpen(false)} className={navLinkClass}>Home</NavLink>
+            <NavLink to="/products" onClick={() => setMenuOpen(false)} className={navLinkClass}>Products</NavLink>
+            <NavLink to="/about" onClick={() => setMenuOpen(false)} className={navLinkClass}>About</NavLink>
+            <NavLink to="/contact" onClick={() => setMenuOpen(false)} className={navLinkClass}>Contact</NavLink>
+          </nav>
+        </div>
       </div>
-      {/* Backdrop overlay for mobile menu */}
-      {open && (
-        <button
-          aria-label="Close menu"
-          onClick={() => setOpen(false)}
-          className="md:hidden fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40"
-        />
-      )}
     </header>
   );
 };

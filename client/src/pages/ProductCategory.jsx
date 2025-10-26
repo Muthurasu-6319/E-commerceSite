@@ -1,115 +1,49 @@
-import { categories } from "../assets/images/assets";
 import ProductCard from "../components/ProductCard";
 import { useAppContext } from "../context/AppContext";
 import { useParams } from "react-router-dom";
+import { useMemo } from "react";
 
 const ProductCategory = () => {
   const { products } = useAppContext();
   const { category } = useParams();
-  const categoryParam = category?.toLowerCase();
-
-  // Find the matching category from predefined categories list
-  const searchCategory = categories.find(
-    (item) => item.path.toLowerCase() === categoryParam
-  );
 
   // Filter products based on category from URL
-  const filteredProducts = products.filter(
-    (product) => product.category.toLowerCase() === categoryParam
-  );
+  const filteredProducts = useMemo(() => {
+    return products.filter(
+      (product) => product.inStock && product.category.toLowerCase() === category.toLowerCase()
+    );
+  }, [products, category]);
+  
+  // Capitalize the first letter of the category for the title
+  const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
 
   return (
-    <div className="mt-16">
-      {/* Category Heading */}
-      {searchCategory && (
-        <div className="flex flex-col items-end w-max">
-          <h1 className="text-3xl md:text-4xl font-medium">
-            {searchCategory.text.toUpperCase()}
+    <div className="py-16 md:py-24">
+       <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-text-header mb-4">
+            {categoryTitle}
           </h1>
+          <p className="text-lg text-text-body max-w-3xl mx-auto">
+            Explore our curated selection of {categoryTitle.toLowerCase()}.
+          </p>
         </div>
-      )}
 
-      {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
-        <div>
-          <div className="my-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 items-center justify-center">
-            {filteredProducts.map((product, index) => (
-              <ProductCard key={index} product={product} />
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product._id} product={product} />
             ))}
           </div>
-        </div>
-      ) : (
-        <div>
-          <h1 className="text-3xl md:text-4xl font-medium">
-            No products found
-          </h1>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-20 bg-background-alt rounded-lg border border-border">
+            <h3 className="text-xl font-semibold text-text-header">No Products Found</h3>
+            <p className="text-text-muted mt-2">There are currently no products available in this category.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 export default ProductCategory;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { categories } from "../assets/assets";
-// import ProductCard from "../components/ProductCard";
-// import { useAppContext } from "../context/AppContext";
-// import { useParams } from "react-router-dom";
-// const ProductCategory = () => {
-//   const { products } = useAppContext();
-//   const { category } = useParams();
-//   const searchCategory = categories.find(
-//     (item) => item.path.toLowerCase() === category
-//   );
-
-//   const filteredProducts = products.filter(
-//     (product) => product.category.toLowerCase() === category
-//   );
-//   return (
-//     <div className="mt-16">
-//       {searchCategory && (
-//         <div className="flex flex-col items-end w-max">
-//           <h1 className="text-3xl md:text-4xl font-medium">
-//             {searchCategory.text.toUpperCase()}
-//           </h1>
-//         </div>
-//       )}     
-//       {filteredProducts.length > 0 ? (
-//         <div>
-//           <div className="my-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 items-center justify-center">
-//             {filteredProducts.map((product, index) => (
-//               <ProductCard key={index} product={product} />
-//             ))}
-//           </div>
-//         </div>
-//       ) : (
-//         <div>
-//           <h1 className="text-3xl md:text-4xl font-medium">
-//             No products found
-//           </h1>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-// export default ProductCategory;
