@@ -1,10 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss";
 
 /* Base styles for all elements */
 * {
-  font-family: "Outfit", sans-serif;
+  font-family: "Inter", sans-serif;
   box-sizing: border-box;
 }
 
@@ -15,22 +15,23 @@ html {
 }
 
 /* 
-  NEW "MODERN HERITAGE" COLOR PALETTE
-  Reflects authentic, premium, and earthy tones of homemade goods.
+  NEW "FRESH GROCERY" COLOR PALETTE
+  Inspired by the "Alli Grocery" reference.
 */
 @theme {
-  --color-primary: #881337;         /* Rose-900 (Maroon): Rich, traditional, bold. */
-  --color-primary-dark: #701A75;    /* Fuchsia-900: A slightly deeper tone for hovers. */
-  --color-accent: #FDE68A;          /* Amber-200 (Beige/Gold): Warm, premium, elegant accent. */
-  --color-accent-dark: #FACC15;     /* Amber-400: A stronger gold for highlights. */
+  --color-primary: #008060;       /* Deep Teal/Green: Professional, organic, trustworthy. */
+  --color-primary-dark: #00664d;  /* Darker shade for hovers. */
+  --color-accent: #f28c28;        /* Warm Orange: For call-to-actions, highlights. */
+  --color-accent-dark: #d97d24;   /* Darker orange for hovers. */
   
-  --color-text-header: #44403C;     /* Stone-700 (Dark Brown): Softer and warmer than black for headings. */
-  --color-text-body: #57534E;       /* Stone-600: For readable body text. */
-  --color-text-muted: #78716C;      /* Stone-500: For subtitles and less important text. */
+  --color-text-header: #212529;   /* Near Black: For strong headings. */
+  --color-text-body: #495057;     /* Dark Gray: For readable body text. */
+  --color-text-muted: #6c757d;    /* Muted Gray: For subtitles and less important text. */
 
-  --color-background: #FFFBEB;     /* Amber-50 (Warm Off-White): A cozy, natural, paper-like background. */
-  --color-background-alt: #FFFFFF; /* White: For cards and elevated sections. */
-  --color-border: #F7F1DF;          /* A lighter beige for subtle borders. */
+  --color-background: #f8f9fa;   /* Light Grayish White: Clean and modern background. */
+  --color-surface: #ffffff;      /* Pure White: For cards and elevated sections. */
+  --color-border: #dee2e6;        /* Light Gray: For subtle borders and dividers. */
+  --color-light-green: #e6f2ef;   /* A very light green for accents/backgrounds. */
 }
 
 /* Global body style */

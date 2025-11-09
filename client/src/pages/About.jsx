@@ -1,63 +1,148 @@
 import React from "react";
+import TeamMemberCard from "../components/TeamMemberCard"; 
+// --- FIX: Removed 'turmeric' and will re-use an existing professional image ---
+import { 
+    home11 as missionImage, 
+    home5 as qualityImage, 
+    home14 as processImage
+} from "../assets/images/assets"; 
+import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
+import AnimatedCounter from "../components/AnimatedCounter";
 
-const ValueCard = ({ icon, title, text }) => (
-  <div className="bg-background-alt p-6 rounded-lg border border-border text-center">
-    <div className="flex justify-center items-center w-16 h-16 mx-auto mb-4 bg-accent/50 text-primary rounded-full">
-      {icon}
+// Section wrapper for animations
+const AnimatedSection = ({ children, className }) => {
+    const [ref, isIntersecting] = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
+    return (
+        <section 
+            ref={ref}
+            className={`${className} transition-all duration-1000 ${isIntersecting ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+        >
+            {children}
+        </section>
+    );
+};
+
+// "Our Process" Step Component
+const ProcessStep = ({ number, title, description }) => (
+    <div className="relative pl-12">
+        <div className="absolute left-0 top-0 w-10 h-10 flex items-center justify-center bg-light-green text-primary rounded-full font-bold text-lg">
+            {number}
+        </div>
+        <h3 className="text-xl font-bold text-text-header mb-2">{title}</h3>
+        <p className="text-text-muted">{description}</p>
     </div>
-    <h3 className="text-xl font-bold text-text-header mb-2">{title}</h3>
-    <p className="text-text-muted">{text}</p>
-  </div>
 );
 
 export default function About() {
   return (
-    <div className="py-16 md:py-24">
-      <div className="max-w-5xl mx-auto px-4">
-        {/* Header Section */}
-        <div className="text-center mb-16">
-          <span className="inline-block bg-accent text-primary rounded-full px-4 py-1.5 text-sm font-semibold tracking-wider mb-4">
-            ABOUT VINITAMART
-          </span>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-text-header mb-4">
-            Authentic Taste, Natural Goodness.
-          </h1>
-          <p className="text-lg text-text-body max-w-3xl mx-auto">
-            At Vinitamart, we believe that health and taste go hand in hand. From traditional spice powders to nutritious health mixes, every product is made with handpicked ingredients and time-tested recipes.
-          </p>
+    <div className="bg-background">
+      {/* 1. Header Section */}
+      <section className="bg-primary text-white text-center py-20">
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-4">A Legacy of Purity & Taste</h1>
+          <p className="text-lg text-gray-200">Discover the story behind VinitaMart's commitment to authentic, homemade goodness.</p>
         </div>
+      </section>
 
-        {/* Our Values Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          <ValueCard 
-            icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6M9 11.25h6M9 15.75h6" /></svg>}
-            title="Tradition"
-            text="Honoring timeless recipes passed down through generations."
-          />
-           <ValueCard 
-            icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>}
-            title="Purity"
-            text="Using only 100% natural ingredients with no preservatives."
-          />
-           <ValueCard 
-            icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-            title="Quality"
-            text="Ensuring freshness and excellence in every single spoonful."
-          />
-           <ValueCard 
-            icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-3.152a.563.563 0 00-.652 0l-4.725 3.152a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>}
-            title="Trust"
-            text="Building a transparent and lasting relationship with you."
-          />
-        </div>
-
-        {/* Story Section */}
-        <div className="text-center">
-            <h2 className="text-3xl font-bold text-text-header mb-4">Our Story</h2>
-            <p className="text-text-body leading-relaxed max-w-3xl mx-auto">
-            Vinitamart started as a small family passion to bring authentic Indian flavors to Vietnam. What began in a home kitchen has now grown into a trusted brand, but our core philosophy remains the same: create healthy, flavorful moments every day. Whether it's enhancing your favorite dish with our rich, aromatic spices or enjoying a wholesome drink with our malt and millet mixes, Vinitamart is your trusted partner in the kitchen. With us, you don’t just cook—you create.
+      <div className="py-16 md:py-24 space-y-16 md:space-y-24">
+        
+        {/* 2. Our Mission Section */}
+        <AnimatedSection className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span className="text-primary font-semibold tracking-wider uppercase">Our Core Belief</span>
+            <h2 className="text-3xl font-bold text-text-header mb-4 mt-2">Good Food, Good Life</h2>
+            <p className="text-text-body leading-relaxed mb-4">
+              Our mission is to bring the authentic taste of home to every kitchen. We believe in the power of natural ingredients and traditional recipes to not only create delicious meals but also to foster a healthier, happier lifestyle for your family.
             </p>
-        </div>
+          </div>
+          <div className="flex justify-center">
+            <img src={missionImage} alt="Our mission" className="rounded-2xl shadow-lg w-full max-w-sm"/>
+          </div>
+        </AnimatedSection>
+
+        {/* 3. Animated Counters Section */}
+        <section className="max-w-5xl mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div><h3 className="text-4xl md:text-5xl font-bold text-primary"><AnimatedCounter target="50" />+</h3><p className="text-text-muted mt-2">Unique Products</p></div>
+                <div><h3 className="text-4xl md:text-5xl font-bold text-primary"><AnimatedCounter target="500" />+</h3><p className="text-text-muted mt-2">Happy Customers</p></div>
+                <div><h3 className="text-4xl md:text-5xl font-bold text-primary"><AnimatedCounter target="100" suffix="%" /></h3><p className="text-text-muted mt-2">Natural Ingredients</p></div>
+                <div><h3 className="text-4xl md:text-5xl font-bold text-primary"><AnimatedCounter target="4" />+</h3><p className="text-text-muted mt-2">Years of Tradition</p></div>
+            </div>
+        </section>
+
+        {/* 4. "Ingredient Spotlight" Section */}
+        <section className="bg-surface py-16">
+            <AnimatedSection className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div className="flex justify-center">
+                    {/* --- FIX: Using an existing imported image 'qualityImage' --- */}
+                    <img src={qualityImage} alt="Ingredient Spotlight" className="rounded-2xl shadow-lg w-full max-w-sm"/>
+                </div>
+                <div className="text-center md:text-left">
+                    <span className="text-primary font-semibold tracking-wider uppercase">The Soul of Our Spices</span>
+                    <h2 className="text-3xl font-bold text-text-header mb-4 mt-2">Directly From the Source</h2>
+                    <p className="text-text-body leading-relaxed mb-6">
+                        We source our world-renowned spices directly from the fields of India. Known for high quality and vibrant color, they form the foundation of our spice blends, providing not just flavor but also immense health benefits. This is our commitment to authenticity in every pinch.
+                    </p>
+                </div>
+            </AnimatedSection>
+        </section>
+
+        {/* 5. Our Process Section */}
+        <AnimatedSection className="max-w-5xl mx-auto px-4">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-text-header">Our Craftsmanship</h2>
+                <p className="text-base text-text-muted mt-2">From farm to your family, with care at every step.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div className="space-y-10">
+                    <ProcessStep number="1" title="Ethical Sourcing" description="We partner with local farmers who share our values, ensuring every ingredient is fresh, natural, and sustainably grown." />
+                    <ProcessStep number="2" title="Handcrafted Blends" description="Using traditional stone-grinding techniques, we prepare our masalas in small batches to preserve their natural oils and authentic aroma." />
+                    <ProcessStep number="3" title="Hygienic Packing" description="Every product is packed in a clean, controlled environment, sealing in the freshness and purity until it reaches your kitchen." />
+                </div>
+                <div className="flex justify-center">
+                    <img src={processImage} alt="Our Process" className="rounded-2xl shadow-lg w-full max-w-sm"/>
+                </div>
+            </div>
+        </AnimatedSection>
+        
+        {/* 6. "Behind the Scenes" Video Section */}
+        <AnimatedSection className="max-w-5xl mx-auto px-4 text-center">
+             <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-text-header">Behind the Scenes</h2>
+                <p className="text-base text-text-muted mt-2">See the passion and care that goes into every pack.</p>
+            </div>
+            <div className="relative aspect-video w-full rounded-2xl shadow-2xl overflow-hidden">
+                <iframe 
+                    className="absolute top-0 left-0 w-full h-full"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&mute=1&controls=1&loop=1&playlist=dQw4w9WgXcQ"
+                    title="Behind the Scenes at VinitaMart" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen>
+                </iframe>
+            </div>
+        </AnimatedSection>
+        
+        {/* 7. Our Journey (Timeline) */}
+        <AnimatedSection className="max-w-5xl mx-auto px-4">
+            <div className="text-center mb-12"><h2 className="text-3xl md:text-4xl font-bold text-text-header">Our Journey</h2></div>
+            <div className="relative">
+                <div className="absolute left-1/2 w-0.5 h-full bg-border -translate-x-1/2"></div>
+                <div className="relative mb-8 flex justify-between items-center w-full"><div className="w-1/2 pr-8 text-right"><p className="font-bold text-primary">2020</p><h3 className="text-xl font-semibold text-text-header">The Idea Was Born</h3></div><div className="absolute left-1/2 w-4 h-4 bg-primary rounded-full -translate-x-1/2"></div></div>
+                <div className="relative mb-8 flex justify-between items-center w-full"><div className="w-1/2"></div><div className="w-1/2 pl-8 text-left"><p className="font-bold text-primary">2022</p><h3 className="text-xl font-semibold text-text-header">First 100 Customers</h3></div><div className="absolute left-1/2 w-4 h-4 bg-primary rounded-full -translate-x-1/2"></div></div>
+                <div className="relative flex justify-between items-center w-full"><div className="w-1/2 pr-8 text-right"><p className="font-bold text-primary">2024</p><h3 className="text-xl font-semibold text-text-header">Launching Online</h3></div><div className="absolute left-1/2 w-4 h-4 bg-primary rounded-full -translate-x-1/2"></div></div>
+            </div>
+        </AnimatedSection>
+
+        {/* 8. Meet The Team Section */}
+        <AnimatedSection className="max-w-5xl mx-auto px-4">
+            <div className="text-center mb-12"><h2 className="text-3xl md:text-4xl font-bold text-text-header">The Artisans of Taste</h2><p className="text-base text-text-muted mt-2">The family behind the flavor.</p></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                <TeamMemberCard name="Vinita" role="Founder & Master Chef" />
+                <TeamMemberCard name="Raja" role="CEO & Tech Visionary" />
+                <TeamMemberCard name="Suresh" role="Head of Operations" />
+            </div>
+        </AnimatedSection>
       </div>
     </div>
   );

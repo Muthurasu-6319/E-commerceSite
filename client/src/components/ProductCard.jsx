@@ -1,4 +1,3 @@
-import { assets } from "../assets/images/assets";
 import { useAppContext } from "../context/AppContext";
 import { formatVND } from "../utils/currency";
 import { getImageUrl } from "../utils/config";
@@ -22,7 +21,7 @@ const ProductCard = ({ product }) => {
   return (
     <div
       onClick={handleCardClick}
-      className="group bg-background-alt border border-border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 w-full mx-auto cursor-pointer flex flex-col overflow-hidden"
+      className="group bg-surface border border-border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 w-full mx-auto cursor-pointer flex flex-col overflow-hidden"
     >
       {/* Product Image */}
       <div className="relative w-full h-48 sm:h-56 overflow-hidden">
@@ -32,7 +31,8 @@ const ProductCard = ({ product }) => {
           alt={product.name}
           loading="lazy"
         />
-        <div className="absolute top-3 right-3 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">
+        {/* Restyled Discount Badge */}
+        <div className="absolute top-3 right-3 bg-accent text-white text-xs font-bold px-2.5 py-1 rounded-full">
           - {Math.round(((product.price - product.offerPrice) / product.price) * 100)}%
         </div>
       </div>
@@ -47,27 +47,31 @@ const ProductCard = ({ product }) => {
         </div>
 
         <div className="mt-4 flex items-end justify-between">
+          {/* Price Section */}
           <div className="flex flex-col">
-            <p className="text-gray-400 text-sm line-through">{formatVND(product.price)}</p>
+            <p className="text-text-muted text-sm line-through">{formatVND(product.price)}</p>
             <p className="text-primary text-lg font-bold">
               {formatVND(product.offerPrice)}
             </p>
           </div>
 
+          {/* Add to Cart / Quantity Counter */}
           <div onClick={handleCartInteraction}>
             {itemQuantity === 0 ? (
+              // New "Add" button for better user experience
               <button
                 onClick={() => addToCart(product._id)}
-                className="flex items-center justify-center w-10 h-10 border-2 border-primary text-primary rounded-full hover:bg-primary hover:text-white transition-all duration-300"
+                className="px-5 py-2 bg-accent text-white text-sm font-bold rounded-full hover:bg-accent-dark transition-colors"
                 aria-label="Add to cart"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                Add
               </button>
             ) : (
-              <div className="flex items-center gap-2 bg-primary text-white rounded-full h-10 px-2">
+              // Restyled Quantity Counter
+              <div className="flex items-center gap-2 bg-primary text-white rounded-full h-10 px-2 shadow-sm">
                 <button
                   onClick={() => removeFromCart(product._id)}
-                  className="w-6 h-6 flex items-center justify-center text-lg font-bold"
+                  className="w-7 h-7 flex items-center justify-center text-lg font-bold rounded-full hover:bg-primary-dark transition-colors"
                   aria-label="Decrease quantity"
                 >
                   −
@@ -75,7 +79,7 @@ const ProductCard = ({ product }) => {
                 <span className="text-sm font-bold w-4 text-center">{itemQuantity}</span>
                 <button
                   onClick={() => addToCart(product._id)}
-                  className="w-6 h-6 flex items-center justify-center text-lg font-bold"
+                  className="w-7 h-7 flex items-center justify-center text-lg font-bold rounded-full hover:bg-primary-dark transition-colors"
                   aria-label="Increase quantity"
                 >
                   +
