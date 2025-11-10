@@ -78,14 +78,15 @@ const Footer = () => {
           </div>
 
           {/* Shop */}
-          <div>
-            <h3 className="text-base font-semibold text-text-header mb-4 tracking-wider uppercase">Shop</h3>
-            <ul className="space-y-3 text-sm">
-              <li><FooterLink to="/products/spices">Spices</FooterLink></li>
-              <li><FooterLink to="/products/health-mix">Health Mix</FooterLink></li>
-              <li><FooterLink to="/products/malts">Malts</FooterLink></li>
-            </ul>
-          </div>
+         <div>
+  <h3 className="text-base font-semibold text-text-header mb-4 tracking-wider uppercase">Shop</h3>
+  <ul className="space-y-3 text-sm">
+    {/* --- FIX: Updated the "to" prop to point to the correct category routes --- */}
+    <li><FooterLink to="/products/flour">Flour</FooterLink></li>
+    <li><FooterLink to="/products/health%20mix">Health Mix</FooterLink></li>
+    <li><FooterLink to="/products/malts">Malts</FooterLink></li>
+  </ul>
+</div>
 
           {/* Contact Info */}
           <div>
