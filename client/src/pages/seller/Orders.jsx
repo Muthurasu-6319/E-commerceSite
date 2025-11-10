@@ -5,90 +5,30 @@ import { formatVND } from "../../utils/currency";
 import { getImageUrl } from "../../utils/config";
 
 const Orders = () => {
-  const { axios, backendUrl } = useContext(AppContext);
+  const { axios } = useContext(AppContext);
   const [orders, setOrders] = useState([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
 
   const fetchOrders = async (pageNum = 1) => {
     try {
-      console.log("Fetching orders with params:", {
-        page: pageNum,
-        limit: 10,
-        search,
-        status: statusFilter,
-      });
-
-      const { data } = await axios.get("/api/order/seller", {
-        params: {
-          page: pageNum,
-          limit: 10,
-          search,
-          status: statusFilter,
-        },
-      });
-
-      console.log("Orders response:", data);
-
+      const { data } = await axios.get("/api/order/seller", { params: { page: pageNum, limit: 10 } });
       if (data.success) {
-        setOrders(data.orders);
-        setPages(data.pages);
-        setPage(data.page);
-        console.log("Orders set:", data.orders.length);
+        setOrders(data.orders); setPages(data.pages); setPage(data.page);
       } else {
-        console.error("Orders fetch failed:", data.message);
-        toast.error(data.message || "Failed to fetch orders");
+        toast.error(data.message);
       }
     } catch (error) {
-      console.error("Orders fetch error:", error);
-      if (error.response) {
-        console.error("Error response:", error.response.data);
-        toast.error(error.response.data.message || "Failed to fetch orders");
-      } else {
-        toast.error(error.message || "Network error");
-      }
+      toast.error(error.response?.data?.message || "Failed to fetch orders");
     }
   };
-
-  const deleteOrderById = async (orderId) => {
-    const ok = window.confirm("Delete this order permanently? This action cannot be undone.");
-    if (!ok) return;
-    try {
-      const { data } = await axios.delete(`/api/order/${orderId}`);
-      if (data?.success) {
-        toast.success("Order deleted");
-        setOrders((prev) => {
-          const next = prev.filter((o) => o._id !== orderId);
-          // If page becomes empty and there are previous pages, go back a page
-          if (next.length === 0 && page > 1) {
-            const prevPage = page - 1;
-            setPage(prevPage);
-            fetchOrders(prevPage);
-          }
-          return next;
-        });
-      } else {
-        toast.error(data?.message || "Failed to delete order");
-      }
-    } catch (error) {
-      toast.error(error?.response?.data?.message || error.message || "Failed to delete order");
-    }
-  };
-
+  
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const { data } = await axios.put(`/api/order/${orderId}/status`, {
-        status: newStatus,
-      });
+      const { data } = await axios.put(`/api/order/${orderId}/status`, { status: newStatus });
       if (data.success) {
         toast.success("Order status updated");
-        setOrders((prev) =>
-          prev.map((o) =>
-            o._id === orderId ? { ...o, status: newStatus } : o
-          )
-        );
+        fetchOrders(page);
       } else {
         toast.error(data.message);
       }
@@ -97,407 +37,67 @@ const Orders = () => {
     }
   };
 
-  const togglePaymentStatus = async (orderId, currentStatus) => {
+  // --- RE-ADDED: Function to delete an order ---
+  const deleteOrder = async (orderId) => {
+    if (!window.confirm("Permanently delete this order? This cannot be undone.")) return;
     try {
-      const { data } = await axios.put(`/api/order/${orderId}/payment`, 
-        { isPaid: !currentStatus },
-        { withCredentials: true } // Ensure cookies are sent with the request
-      );
-      
+      const { data } = await axios.delete(`/api/order/${orderId}`);
       if (data.success) {
-        toast.success(data.message || `Payment status updated to ${!currentStatus ? 'Paid' : 'Pending'}`);
-        setOrders((prev) =>
-          prev.map((o) =>
-            o._id === orderId ? { 
-              ...o, 
-              isPaid: !currentStatus,
-              paidAt: !currentStatus ? new Date().toISOString() : null
-            } : o
-          )
-        );
+        toast.success("Order deleted successfully.");
+        fetchOrders(page); // Refresh the list
       } else {
-        toast.error(data.message || 'Failed to update payment status');
+        toast.error(data.message);
       }
     } catch (error) {
-      console.error('Error updating payment status:', error);
-      toast.error(error.response?.data?.message || 'Failed to update payment status');
+       toast.error(error.response?.data?.message || "Failed to delete order.");
     }
   };
 
-  useEffect(() => {
-    fetchOrders(page);
-  }, [page, statusFilter]);
-
-  // Reset to first page when search term changes via Search button
-  // (Handled by clicking Search which calls fetchOrders(1) and we'll set page to 1.)
+  useEffect(() => { fetchOrders(page) }, [page]);
 
   return (
-    <div className="p-2 sm:p-4 md:p-6">
-      <h2 className="text-lg sm:text-xl font-medium mb-4">Orders Management</h2>
-
-      {/* Search and Filter */}
-      <div className="space-y-2 mb-4">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            placeholder="Search by name or product..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 border p-2 rounded text-sm sm:text-base"
-          />
-          <button
-            onClick={() => { setPage(1); }}
-            className="bg-primary hover:bg-[color:var(--color-primary-600)] text-white px-4 py-2 rounded whitespace-nowrap"
-          >
-            Search
-          </button>
-        </div>
-        <div className="w-full">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full border p-2 rounded text-sm sm:text-base"
-          >
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Processing">Processing</option>
-            <option value="Shipped">Shipped</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Orders List */}
-      {orders.length === 0 ? (
-        <div className="flex justify-center items-center p-10">
-          <div className="text-center">
-            <p className="text-gray-500">No orders found.</p>
-            <p className="text-gray-400 text-sm mt-1">Try changing filters or search.</p>
-          </div>
-        </div>
-      ) : (
-        <div className="overflow-hidden">
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full border border-gray-300 text-sm">
-              <thead className="bg-gray-100 text-gray-900">
-                <tr>
-                  <th className="p-2 border w-1/4">Product</th>
-                  <th className="p-2 border w-1/4">Customer</th>
-                  <th className="p-2 border w-32">Amount</th>
-                  <th className="p-2 border w-32">Payment</th>
-                  <th className="p-2 border w-28">Date</th>
-                  <th className="p-2 border w-36">Status</th>
-                  <th className="p-2 border w-36">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order._id} className="border hover:bg-gray-50">
-                    <td className="p-2 border">
-                      {order.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <img
-                            src={
-                              item.product?.image?.[0]
-                                ? getImageUrl(item.product.image[0])
-                                : "/no-image.png"
-                            }
-                            alt="product"
-                            className="w-10 h-10 object-cover rounded"
-                          />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium break-words whitespace-normal">
-                              {item.product?.name || "Unknown"}
-                            </p>
-                            <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </td>
-                    <td className="p-2 border group relative">
-                      <div className="flex flex-col gap-1 text-xs">
-                        <div className="font-medium">
-                          {order.address.firstName} {order.address.lastName}
-                        </div>
-                        <div className="text-gray-600 truncate">{order.address.email}</div>
-                        <div className="text-gray-500 text-xs">
-                          {order.address.phone}
-                        </div>
-                      </div>
-                      
-                      {/* Hover card with full details */}
-                      <div className="absolute z-10 left-0 mt-2 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                        <h4 className="font-medium text-sm mb-2">Customer Details</h4>
-                        <div className="space-y-1 text-xs">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-gray-500">First Name</p>
-                              <p className="font-medium">{order.address.firstName || 'Not provided'}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500">Last Name</p>
-                              <p className="font-medium">{order.address.lastName || 'Not provided'}</p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Email</p>
-                            <p className="font-medium break-words">{order.address.email || 'Not provided'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Phone</p>
-                            <p className="font-medium">{order.address.phone || 'Not provided'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Address</p>
-                            <p className="font-medium">{order.address.street || 'Not provided'}</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-gray-500">City</p>
-                              <p className="font-medium">{order.address.city || 'Not provided'}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500">State</p>
-                              <p className="font-medium">{order.address.state || 'Not provided'}</p>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-gray-500">Postal Code</p>
-                              <p className="font-medium">{order.address.zipCode || 'Not provided'}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500">Country</p>
-                              <p className="font-medium">{order.address.country || 'Not provided'}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-2 border">
-                      <span className="font-medium">{formatVND(order.amount)}</span>
-                    </td>
-                    <td className="p-2 border">
-                      <button
-                        onClick={() => togglePaymentStatus(order._id, order.isPaid)}
-                        className={`w-full px-2 py-1 rounded text-xs sm:text-sm whitespace-nowrap ${
-                          order.isPaid 
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        }`}
-                      >
-                        {order.isPaid ? '✓ Paid' : '✕ Pending'}
-                      </button>
-                    </td>
-                    <td className="p-2 border text-xs sm:text-sm">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="p-2 border">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {order.status || 'Pending'}
-                      </span>
-                    </td>
-                    <td className="p-2 border">
-                      <div className="flex flex-col gap-2">
-                        <select
-                          value={order.status || "Pending"}
-                          onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                          className="w-full p-1 border rounded text-xs sm:text-sm"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Processing">Processing</option>
-                          <option value="Shipped">Shipped</option>
-                          <option value="Delivered">Delivered</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                        <button
-                          onClick={() => deleteOrderById(order._id)}
-                          className="w-full px-2 py-1 rounded text-xs sm:text-sm bg-red-500 text-white hover:bg-red-600"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="md:hidden space-y-4">
+    <div className="bg-surface p-6 rounded-xl border border-border shadow-sm">
+      <h1 className="text-xl font-bold text-text-header mb-6">Customer Orders</h1>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-xs text-text-muted uppercase bg-light-green">
+            <tr>
+              <th className="px-6 py-3">Order ID</th><th className="px-6 py-3">Items</th><th className="px-6 py-3">Customer</th>
+              <th className="px-6 py-3">Total</th><th className="px-6 py-3">Status</th><th className="px-6 py-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
             {orders.map((order) => (
-              <div key={order._id} className="border rounded-lg overflow-hidden shadow-sm">
-                <div className="p-3 border-b bg-gray-50">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">Order #{order._id.slice(-6).toUpperCase()}</h3>
-                      <p className="text-sm text-gray-500">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {order.status || 'Pending'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3 border-b">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">Customer Details</h4>
-                    <button
-                      onClick={() => togglePaymentStatus(order._id, order.isPaid)}
-                      className={`px-2 py-1 rounded text-xs ${
-                        order.isPaid 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {order.isPaid ? '✓ Paid' : '✕ Pending'}
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-gray-500">First Name</p>
-                        <p className="font-medium">{order.address.firstName || 'Not provided'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Last Name</p>
-                        <p className="font-medium">{order.address.lastName || 'Not provided'}</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-gray-500">Email</p>
-                      <p className="font-medium">{order.address.email || 'Not provided'}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-gray-500">Phone</p>
-                      <p className="font-medium">{order.address.phone || 'Not provided'}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-gray-500">Address</p>
-                      <p className="font-medium">{order.address.street || 'Not provided'}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-gray-500">City</p>
-                        <p className="font-medium">{order.address.city || 'Not provided'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">State</p>
-                        <p className="font-medium">{order.address.state || 'Not provided'}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-gray-500">Postal Code</p>
-                        <p className="font-medium">{order.address.zipCode || 'Not provided'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Country</p>
-                        <p className="font-medium">{order.address.country || 'Not provided'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3 border-b">
-                  <h4 className="font-medium mb-2">Products</h4>
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2 py-1">
-                      <img
-                        src={
-                          item.product?.image?.[0]
-                            ? getImageUrl(item.product.image[0])
-                            : "/no-image.png"
-                        }
-                        alt="product"
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.product?.name || "Unknown"}</p>
-                        <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                        <p className="text-sm font-medium">{formatVND(item.product?.offerPrice * item.quantity)}</p>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="mt-2 pt-2 border-t flex justify-between items-center">
-                    <span className="font-medium">Total:</span>
-                    <span className="font-medium">{formatVND(order.amount)}</span>
-                  </div>
-                </div>
-
-                <div className="p-3">
-                  <label className="block text-sm font-medium mb-1">Update Status</label>
-                  <select
-                    value={order.status || "Pending"}
-                    onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                    className="w-full p-2 border rounded text-sm"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
+              <tr key={order._id} className="border-b hover:bg-gray-50">
+                <td className="px-6 py-4 font-medium text-primary">#{order._id.slice(-6)}</td>
+                <td className="px-6 py-4">
+                  {order.items.map(item => (<div key={item._id} className="flex items-center gap-2 mb-2 last:mb-0">
+                      <img src={getImageUrl(item.product.image[0])} alt="" className="w-8 h-8 rounded-md" />
+                      <span>{item.product.name} x {item.quantity}</span></div>))}
+                </td>
+                <td className="px-6 py-4">{order.address.firstName}</td>
+                <td className="px-6 py-4">{formatVND(order.amount)}</td>
+                <td className="px-6 py-4">
+                  <select value={order.status} onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                    className={`p-2 rounded-md text-xs outline-none border ${order.status === 'Delivered' ? 'bg-green-100 border-green-200 text-green-800' : 'bg-yellow-100 border-yellow-200 text-yellow-800'}`}>
+                    <option value="Pending">Pending</option><option value="Processing">Processing</option><option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option>
                   </select>
-                  <button
-                    onClick={() => deleteOrderById(order._id)}
-                    className="w-full mt-3 px-3 py-2 rounded text-sm bg-red-500 text-white hover:bg-red-600"
-                  >
-                    Delete Order
-                  </button>
-                </div>
-              </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <button onClick={() => deleteOrder(order._id)} className="font-medium text-red-500 hover:underline">Delete</button>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Pagination */}
-      <div className="flex justify-center items-center gap-2 mt-4">
-        <button
-          disabled={page <= 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className={`px-3 py-1 border rounded ${page <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
-        >
-          Prev
-        </button>
-        {Array.from({ length: pages }, (_, i) => i + 1).map((pNum) => (
-          <button
-            key={pNum}
-            onClick={() => setPage(pNum)}
-            className={`px-3 py-1 border rounded ${pNum === page ? 'bg-indigo-500 text-white border-indigo-500' : 'hover:bg-gray-100'}`}
-          >
-            {pNum}
-          </button>
-        ))}
-        <button
-          disabled={page >= pages}
-          onClick={() => setPage((p) => Math.min(pages, p + 1))}
-          className={`px-3 py-1 border rounded ${page >= pages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
-        >
-          Next
-        </button>
+          </tbody>
+        </table>
       </div>
-
-      
+      {orders.length === 0 && <p className="text-center text-text-muted py-10">No orders found.</p>}
+      <div className="flex justify-center items-center gap-2 mt-6">
+        {Array.from({ length: pages }, (_, i) => i + 1).map((pNum) => (
+          <button key={pNum} onClick={() => setPage(pNum)} className={`px-4 py-2 border rounded-md ${pNum === page ? 'bg-primary text-white' : 'hover:bg-light-green'}`}>{pNum}</button>
+        ))}
+      </div>
     </div>
   );
 };

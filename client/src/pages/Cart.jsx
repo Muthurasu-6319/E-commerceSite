@@ -1,283 +1,133 @@
-import { useEffect, useState } from "react";
+import React from "react";
 import { useAppContext } from "../context/AppContext";
+import { useAddress } from "../context/AddressContext"; // Import address context
 import { formatVND } from "../utils/currency";
 import toast from "react-hot-toast";
-import { useAddress } from "../context/AddressContext";
 import { getImageUrl } from "../utils/config";
+import { Link } from "react-router-dom";
 
 const Cart = () => {
-  const {
-    products,
-    navigate,
-    cartCount,
-    totalCartAmount,
-    cartItems,
-    setCartItems,
-    removeFromCart,
-    updateCartItem,
-    axios,
-    user,
-    backendUrl,
-  } = useAppContext();
+  const { products, navigate, cartItems, setCartItems, removeFromCart, addToCart, axios, user } = useAppContext();
+  const { address } = useAddress(); // Get address from context
 
-  // Shipping logic (must come after totalCartAmount is available)
-  const SHIPPING_FEE = 30000; // VND
-  const FREE_SHIPPING_THRESHOLD = 500000; // VND
-  const cartSubtotal = () => totalCartAmount();
-  const computedShipping = cartSubtotal() >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-
-  // State to store the products in the cart
-  const [cartArray, setCartArray] = useState([]);
-
-  // Address from context
-  const { address } = useAddress();
-
-  // State for address dropdown
-  const [showAddressList, setShowAddressList] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(null);
-
-  // Payment method
-  const [paymentOption, setPaymentOption] = useState("COD");
-
-  // Update cart array
-  const getCart = () => {
-    let tempArray = [];
-    for (const key in cartItems) {
-      const product = products.find((p) => p._id === key);
-      if (product) {
-        product.quantity = cartItems[key];
-        tempArray.push(product);
-      }
-    }
-    setCartArray(tempArray);
-  };
-
-  // Sync selectedAddress with address from context
-  useEffect(() => {
-    if (address && Object.keys(address).length > 0) {
-      setSelectedAddress(address);
-    }
-  }, [address]);
-
-  // Update cart products when products/cartItems change
-  useEffect(() => {
-    if (products.length > 0 && cartItems) {
-      getCart();
-    }
+  const cartProducts = React.useMemo(() => {
+    return Object.keys(cartItems).map(key => {
+      const product = products.find(p => p._id === key);
+      if (product) return { ...product, quantity: cartItems[key] };
+      return null;
+    }).filter(Boolean);
   }, [products, cartItems]);
 
-  // Place order
+  const subtotal = React.useMemo(() => {
+    return cartProducts.reduce((total, item) => total + item.offerPrice * item.quantity, 0);
+  }, [cartProducts]);
+
+  const SHIPPING_FEE = 30000;
+  const FREE_SHIPPING_THRESHOLD = 500000;
+  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const totalAmount = subtotal + shippingCost;
+
   const placeOrder = async () => {
+    if (!user) {
+      toast.error("Please login to place an order.");
+      navigate("/login");
+      return;
+    }
+    // --- NEW: Address validation ---
+    if (!address || !address._id) {
+      toast.error("Please add a delivery address first.");
+      navigate("/add-address");
+      return;
+    }
+
     try {
-      if (!selectedAddress || !selectedAddress._id) {
-        return toast.error("Please add and select a saved address");
-      }
-
       const orderPayload = {
-        items: cartArray.map((item) => ({
-          product: item._id,
-          quantity: item.quantity,
-        })),
-        address: selectedAddress._id,
+        items: cartProducts.map(item => ({ product: item._id, quantity: item.quantity })),
+        address: address._id,
       };
-
-      if (paymentOption === "COD") {
-        const { data } = await axios.post("/api/order/cod", orderPayload);
-        if (data.success) {
-          toast.success(data.message);
-          setCartItems({});
-          navigate("/my-orders");
-        } else {
-          toast.error(data.message);
-        }
+      
+      const { data } = await axios.post("/api/order/cod", orderPayload);
+      if (data.success) {
+        toast.success(data.message);
+        setCartItems({});
+        navigate("/my-orders");
       } else {
-        const { data } = await axios.post("/api/order/stripe", orderPayload);
-        if (data.success) {
-          window.location.replace(data.url);
-        }
+        toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || "Failed to place order.");
     }
   };
-
-  if (!(products.length > 0 && cartItems)) return null;
+  
+  if (cartProducts.length === 0) {
+    return (
+      <div className="text-center py-24"><h1 className="text-3xl font-bold text-text-header mb-4">Your Cart is Empty</h1><p className="text-text-muted mb-8">Looks like you haven't added anything yet.</p><button onClick={() => navigate("/products")} className="px-8 py-3 font-bold text-white bg-primary rounded-full shadow-lg hover:bg-primary-dark">Continue Shopping</button></div>
+    );
+  }
 
   return (
-    <div className="flex flex-col md:flex-row py-16 max-w-6xl w-full px-6 mx-auto">
-      {/* CART PRODUCTS */}
-      <div className="flex-1 max-w-4xl">
-        <h1 className="text-3xl font-medium mb-6">
-          Shopping Cart{" "}
-          <span className="text-sm text-indigo-500">{cartCount()} Items</span>
-        </h1>
-
-        <div className="grid grid-cols-[2fr_1fr_1fr] text-gray-500 text-base font-medium pb-3">
-          <p className="text-left">Product Details</p>
-          <p className="text-center">Subtotal</p>
-          <p className="text-center">Action</p>
-        </div>
-
-        {cartArray.map((product, index) => (
-          <div
-            key={index}
-            className="grid grid-cols-[2fr_1fr_1fr] text-gray-500 items-center text-sm md:text-base font-medium pt-3"
-          >
-            <div className="flex items-center md:gap-6 gap-3">
-              <div
-                onClick={() => {
-                  navigate(`product/${product.category}/${product._id}`);
-                  scrollTo(0, 0);
-                }}
-                className="cursor-pointer w-24 h-24 flex items-center justify-center border border-gray-300 rounded"
-              >
-                <img
-                  className="max-w-full h-full object-cover"
-                  src={getImageUrl(product.image[0])}
-                  alt={product.name}
-                />
-              </div>
-              <div>
-                <p className="hidden md:block font-semibold">{product.name}</p>
-                <div className="font-normal text-gray-500/70">
-                  <p>
-                    Weight: <span>{product.weight || "N/A"}</span>
-                  </p>
-                  <div className="flex items-center">
-                    <p>Qty:</p>
-                    <select
-                      onChange={(e) =>
-                        updateCartItem(product._id, Number(e.target.value))
-                      }
-                      value={cartItems[product._id] ?? 1}
-                      className="outline-none"
-                    >
-                      {Array(
-                        cartItems[product._id] > 9
-                          ? cartItems[product._id]
-                          : 9
-                      )
-                        .fill("")
-                        .map((_, idx) => (
-                          <option key={idx} value={idx + 1}>
-                            {idx + 1}
-                          </option>
-                        ))}
-                    </select>
+    <div className="py-16 md:py-24">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12"><h1 className="text-4xl md:text-5xl font-extrabold text-text-header">Shopping Cart</h1></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="lg:col-span-2 bg-surface p-6 rounded-xl shadow-md border border-border">
+            <div className="space-y-6">
+              {cartProducts.map(product => (
+                <div key={product._id} className="flex items-center gap-4 border-b border-border pb-6 last:border-b-0 last:pb-0">
+                  <img src={getImageUrl(product.image[0])} alt={product.name} className="w-24 h-24 object-cover rounded-lg"/>
+                  <div className="flex-grow">
+                    <Link to={`/product/${product.category.toLowerCase()}/${product._id}`} className="font-bold text-text-header hover:text-primary">{product.name}</Link>
+                    <p className="text-sm text-text-muted">{product.category}</p>
+                    <p className="text-primary font-semibold mt-1">{formatVND(product.offerPrice)}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-2 border border-border rounded-full h-10 px-2">
+                      <button onClick={() => removeFromCart(product._id)} className="w-7 h-7 flex items-center justify-center text-lg font-bold rounded-full hover:bg-gray-100" aria-label="Decrease quantity">−</button>
+                      <span className="text-sm font-bold w-5 text-center">{product.quantity}</span>
+                      <button onClick={() => addToCart(product._id)} className="w-7 h-7 flex items-center justify-center text-lg font-bold rounded-full hover:bg-gray-100" aria-label="Increase quantity">+</button>
+                    </div>
+                    <p className="font-bold text-lg">{formatVND(product.offerPrice * product.quantity)}</p>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-            <p className="text-center">
-              {formatVND(product.offerPrice * product.quantity)}
-            </p>
-            <button
-              onClick={() => removeFromCart(product._id)}
-              className="cursor-pointer mx-auto"
-            >
-              ✖
-            </button>
           </div>
-        ))}
-
-        <button
-          onClick={() => navigate("/products")}
-          className="group cursor-pointer flex items-center mt-8 gap-2 text-indigo-500 font-medium"
-        >
-          ← Continue Shopping
-        </button>
-      </div>
-
-      {/* ORDER SUMMARY */}
-      <div className="max-w-[360px] w-full bg-gray-100/40 p-5 max-md:mt-16 border border-gray-300/70">
-        <h2 className="text-xl md:text-xl font-medium">Order Summary</h2>
-        <hr className="border-gray-300 my-5" />
-
-        {/* Delivery Address */}
-        <div className="mb-6 relative">
-          <p className="text-sm font-medium uppercase">Delivery Address</p>
-          {selectedAddress ? (
-            <div className="mt-2 text-gray-500">
-              <p>{selectedAddress.firstname} {selectedAddress.lastname}</p>
-              <p>{selectedAddress.street}</p>
-              <p>
-                {selectedAddress.city}, {selectedAddress.state} {selectedAddress.zipcode}
-              </p>
-              <p>{selectedAddress.country}</p>
-              <p>{selectedAddress.phone}</p>
-              <p>{selectedAddress.email}</p>
-            </div>
-          ) : (
-            <p className="mt-2 text-gray-500">No Address Found</p>
-          )}
-          <button
-            onClick={() => navigate("/add-address")}
-            className="text-indigo-500 hover:underline cursor-pointer mt-2"
-          >
-            Change / Add Address
-          </button>
-        </div>
-
-        {/* Payment Options */}
-        <p className="text-sm font-medium uppercase mt-6">Payment Method</p>
-        <select
-          onChange={(e) => {
-            if (e.target.value === 'Online') {
-              toast.error('Online payment is currently unavailable. Please choose another payment method.');
-              return;
-            }
-            setPaymentOption(e.target.value);
-          }}
-          className="w-full border border-gray-300 bg-white px-3 py-2 mt-2 outline-none"
-          value={paymentOption}
-        >
-          <option value="COD">Cash On Delivery</option>
-          <option value="Online" disabled style={{ color: '#9CA3AF' }}>Online Payment (Temporarily Unavailable)</option>
-        </select>
-        {paymentOption === 'Online' && (
-          <p className="text-xs text-red-500 mt-1">
-            Online payment is currently unavailable. Please select another payment method.
-          </p>
-        )}
-
-        <hr className="border-gray-300 mt-4" />
-
-        {/* Price Summary */}
-        <div className="text-gray-500 mt-4 space-y-2">
-          <p className="flex justify-between">
-            <span>Price</span>
-            <span>{formatVND(totalCartAmount())}</span>
-          </p>
-          <div>
-            <p className="flex justify-between">
-              <span>Shipping Fee</span>
-              <span>
-                {computedShipping === 0 ? (
-                  <span className="text-green-600">Free</span>
+          <div className="lg:col-span-1">
+            <div className="bg-surface p-6 rounded-xl shadow-md border border-border sticky top-24">
+              <h2 className="text-2xl font-bold text-text-header mb-4">Order Summary</h2>
+              
+              {/* --- NEW: Delivery Address Section --- */}
+              <div className="mb-4">
+                <h3 className="font-semibold text-text-header mb-2">Delivery To:</h3>
+                {address && address._id ? (
+                  <div className="text-sm text-text-muted p-4 bg-light-green rounded-lg">
+                    <p className="font-bold">{address.firstname} {address.lastname}</p>
+                    <p>{address.street}, {address.city}</p>
+                    <p>{address.state}, {address.country} - {address.zipcode}</p>
+                    <button onClick={() => navigate('/add-address')} className="text-primary font-semibold mt-2 hover:underline">Change Address</button>
+                  </div>
                 ) : (
-                  formatVND(computedShipping)
+                  <button onClick={() => navigate('/add-address')} className="w-full py-2 border-2 border-dashed border-primary text-primary font-semibold rounded-lg hover:bg-light-green">
+                    + Add Delivery Address
+                  </button>
                 )}
-              </span>
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Free shipping on orders over {formatVND(FREE_SHIPPING_THRESHOLD)}
-            </p>
-          </div>
-          <p className="flex justify-between text-lg font-medium mt-3">
-            <span>Total Amount:</span>
-            <span>
-              {formatVND(cartSubtotal() + computedShipping)}
-            </span>
-          </p>
-        </div>
+              </div>
 
-        <button
-          onClick={placeOrder}
-          disabled={cartArray.length === 0}
-          className="w-full py-3 mt-6 cursor-pointer bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition disabled:opacity-50"
-        >
-          {paymentOption === "COD" ? "Place Order" : "Proceed to Checkout"}
-        </button>
+              <div className="space-y-3 text-text-body">
+                <div className="flex justify-between"><p>Subtotal</p><p className="font-semibold">{formatVND(subtotal)}</p></div>
+                <div className="flex justify-between"><p>Shipping Fee</p><p className="font-semibold">{shippingCost === 0 ? <span className="text-primary">FREE</span> : formatVND(shippingCost)}</p></div>
+                {shippingCost > 0 && <p className="text-xs text-text-muted text-right">Add {formatVND(FREE_SHIPPING_THRESHOLD - subtotal)} more for free shipping</p>}
+                <div className="border-t border-border pt-4 mt-4">
+                  <div className="flex justify-between font-bold text-lg text-text-header"><p>Total</p><p>{formatVND(totalAmount)}</p></div>
+                </div>
+              </div>
+              
+              <button onClick={placeOrder} className="w-full mt-6 py-3 bg-accent text-white font-bold rounded-full hover:bg-accent-dark transition-colors">
+                Proceed to Checkout
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

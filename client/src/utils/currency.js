@@ -1,13 +1,12 @@
-// Simple VND formatter used across the app
-// Usage: formatVND(12345) => "₫12,345"
-export function formatVND(value) {
+// Simple INR formatter used across the app
+// Usage: formatINR(12345) => "₹12,345"
+export function formatVND(value) { // Function name is kept for backward compatibility
   const num = Number(value) || 0;
-  // Use vi-VN grouping, no decimals, prepend dong symbol
-  return `₫${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(num)}`;
+  // Use en-IN locale for Indian Rupee symbol and grouping
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
 }
-
-// If you ever need with currency style (symbol at the end), use below:
-// export function formatVNDCurrency(value) {
-//   const num = Number(value) || 0;
-//   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(num);
-// }

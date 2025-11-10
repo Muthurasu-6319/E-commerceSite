@@ -8,21 +8,24 @@ import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
 import Footer from "./components/Footer";
 import { useAppContext } from "./context/AppContext";
-// --- FIX: Corrected the import path for Auth.jsx ---
-import Auth from "./modals/Auth"; 
+import Auth from "./modals/Auth";
 import ProductCategory from "./pages/ProductCategory";
 import Address from "./pages/Address";
 import MyOrders from "./pages/MyOrders";
-import SellerLogin from "./components/seller/SellerLogin";
 import SellerLayout from "./pages/seller/SellerLayout";
 import DebugOrders from "./components/DebugOrders";
-import AddProduct from "./pages/seller/AddProduct";
-import ProductList from "./pages/seller/ProductList";
-import Orders from "./pages/seller/Orders";
 import Loading from "./components/Loading";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Hero from "./components/Hero";
+
+// --- UPDATED IMPORTS FOR SELLER SECTION ---
+import SellerLogin from "./pages/seller/SellerLogin";
+import Dashboard from "./pages/seller/Dashboard";
+import AddProduct from "./pages/seller/AddProduct";
+import ProductList from "./pages/seller/ProductList";
+import Orders from "./pages/seller/Orders";
+
 
 const App = () => {
   const { loading, isSeller } = useAppContext();
@@ -30,6 +33,9 @@ const App = () => {
   const isSellerRoute = location.pathname.startsWith("/seller");
   const isHomePage = location.pathname === "/";
   const isAuthPage = location.pathname === "/login";
+
+  // Check if the current route is the seller login route. We do this by checking if the path is /seller AND the user is NOT a seller.
+  const isSellerLoginPage = location.pathname === "/seller" && !isSeller;
 
   const defaultSEO = {
     title: 'VinitaMart',
@@ -42,6 +48,7 @@ const App = () => {
       <div className="min-h-screen flex flex-col">
         {loading && <Loading />}
         
+        {/* Do not show Navbar/Footer on any seller route or login page */}
         {!isSellerRoute && !isAuthPage && <Navbar />}
         
         <Toaster />
@@ -52,7 +59,8 @@ const App = () => {
           className={
             !isSellerRoute && !isAuthPage
               ? `px-6 md:px-16 lg:px-24 xl:px-32 ${!isHomePage && 'pt-8'}`
-              : ''
+              // If it's the seller login page, don't add padding.
+              : isSellerLoginPage ? '' : 'flex-1'
           }
         >
           <Routes>
@@ -69,13 +77,19 @@ const App = () => {
             <Route path="/loader" element={<Loading />} />
             <Route path="/debug-orders" element={<DebugOrders />} />
 
+            {/* --- THIS ROUTE LOGIC IS NOW CORRECT --- */}
             <Route
               path="/seller"
               element={isSeller ? <SellerLayout /> : <SellerLogin />}
             >
-              <Route index element={isSeller ? <AddProduct /> : null} />
-              <Route path="product-list" element={isSeller ? <ProductList /> : null} />
-              <Route path="orders" element={isSeller ? <Orders /> : null} />
+              {isSeller && (
+                <>
+                  <Route index element={<Dashboard />} />
+                  <Route path="add-product" element={<AddProduct />} />
+                  <Route path="product-list" element={<ProductList />} />
+                  <Route path="orders" element={<Orders />} />
+                </>
+              )}
             </Route>
           </Routes>
         </main>
