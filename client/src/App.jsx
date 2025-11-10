@@ -4,6 +4,8 @@ import Products from "./pages/Products";
 import SingleProduct from "./pages/SingleProduct";
 import Home from "./pages/Home";
 import Cart from "./pages/Cart";
+import PrivacyPolicy from "./pages/PrivacyPolicy"; // <-- ADD THIS
+import Terms from "./pages/Terms"; // <-- ADD THIS
 import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
 import Footer from "./components/Footer";
@@ -73,6 +75,9 @@ const App = () => {
             <Route path="/add-address" element={<Address />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+             {/* --- ADD THESE TWO NEW ROUTES --- */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<Terms />} />
             <Route path="/my-orders" element={<MyOrders />} />
             <Route path="/loader" element={<Loading />} />
             <Route path="/debug-orders" element={<DebugOrders />} />

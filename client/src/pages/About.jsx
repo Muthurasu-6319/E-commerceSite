@@ -114,7 +114,7 @@ export default function About() {
             <div className="relative aspect-video w-full rounded-2xl shadow-2xl overflow-hidden">
                 <iframe 
                     className="absolute top-0 left-0 w-full h-full"
-                    src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&mute=1&controls=1&loop=1&playlist=dQw4w9WgXcQ"
+                    src="https://www.youtube.com/embed/lpYdqopKvxw?si=Q9wYjTmr6PPCv2Li"
                     title="Behind the Scenes at VinitaMart" 
                     frameBorder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 

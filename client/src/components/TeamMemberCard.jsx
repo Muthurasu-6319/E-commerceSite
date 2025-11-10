@@ -1,5 +1,5 @@
 import React from 'react';
-import placeholder from '../assets/images/apple_image.png'; 
+import placeholder from '../assets/images/profile.jpeg'; 
 
 const TeamMemberCard = ({ name, role, image }) => {
   return (

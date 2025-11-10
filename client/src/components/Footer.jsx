@@ -111,8 +111,8 @@ const Footer = () => {
         <div className="mt-8 py-6 border-t border-border flex flex-col md:flex-row items-center justify-between text-xs text-text-muted">
           <p>© {new Date().getFullYear()} vinitamart · All Rights Reserved.</p>
           <ul className="flex items-center gap-6 mt-4 md:mt-0">
-            <li><FooterLink to="#">Privacy Policy</FooterLink></li>
-            <li><FooterLink to="#">Terms of Service</FooterLink></li>
+             <li><FooterLink to="/privacy-policy">Privacy Policy</FooterLink></li>
+          <li><FooterLink to="/terms-of-service">Terms of Service</FooterLink></li>
           </ul>
         </div>
       </div>
